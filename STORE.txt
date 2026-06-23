@@ -1,0 +1,27 @@
+Vipassana — Silent, tactile meditation timer
+
+Vipassana paces your sitting with vibrations alone. No bells, no sound, no screen to look at: you feel the rhythm on your wrist and keep your eyes closed.
+
+Made for people who meditate and want a timer that is discreet, always there, and speaks only through touch. A phone distracts and tempts you to look at the screen. Your wrist does not.
+
+HOW IT WORKS
+
+- Open-ended sittings: the duration you pick is not an end but a cycle that repeats for as long as you sit, without breaking the rhythm.
+- On open, your last-used setup is already selected: one tap and you start again like yesterday.
+- During the sitting the screen shows only the elapsed minutes, large and centred on a dark background. No countdown, no progress bar, no cycle counter to stare at.
+
+THE VIBRATIONS
+
+- Periodic tick (every 10 or 30 min): a brief, light tap.
+- Mid-cycle: a medium double.
+- End of cycle: two long pulses, then the cycle restarts on its own.
+
+The three patterns are deliberately distinct in rhythm, so you know where you are without opening your eyes.
+
+BUILT FOR MEDITATION
+
+- Detects Quiet Time: if it is off, the app reminds you to turn it on before you begin, so outside notifications do not disturb you.
+- Timekeeping anchored to absolute time: zero drift even on long sittings.
+- Dark screen and backlight off, to avoid distraction and save battery.
+
+No accounts, no statistics, no cloud. Just you, the breath, and a beat on your wrist.

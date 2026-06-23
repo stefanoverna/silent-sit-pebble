@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "skills": {
+    "breadboarding": {
+      "source": "rjs/shaping-skills",
+      "sourceType": "github",
+      "skillPath": "breadboarding/SKILL.md",
+      "computedHash": "3462698edf8a72d9651a3c46beba378f7e08cf416b1cbfe6e4649c2460176951"
+    },
+    "pebble-watchapp": {
+      "source": "/Users/stefanoverna/dato/pebble/skills/pebble-watchapp",
+      "sourceType": "local",
+      "computedHash": "55e5e1faa0c0825aadacd37e96978c117d2f2784a79ae3125472d32b4b606364"
+    },
+    "shaping": {
+      "source": "rjs/shaping-skills",
+      "sourceType": "github",
+      "skillPath": "shaping/SKILL.md",
+      "computedHash": "9756afea557c899e0d124b3c912b7a14d28d6bc4c037367d97c67b0ea8b29443"
+    }
+  }
+}
