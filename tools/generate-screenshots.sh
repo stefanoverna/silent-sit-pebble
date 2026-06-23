@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 #
-# generate-screenshots.sh — reproducibly capture the Vipassana store screenshots.
+# generate-screenshots.sh — reproducibly capture the Silent Sit store screenshots.
 #
-# Produces, under screenshots/<platform>/, the four representative screens:
-#   01-setup.png        config screen, default 30 min · tick 10 min
-#   02-quiet-time.png   "turn on Quiet Time" reminder
-#   03-meditation.png   running seduta, ~12 min elapsed (non-zero readout)
-#   04-summary.png      "Session ended", 12 min total
+# Produces, under screenshots/<platform>/, the five representative screens:
+#   01-home.png         home screen: Inizia · 30 min · tick 10 min + Down caret
+#   02-settings.png     settings menu (duration / tick interval)
+#   03-quiet-time.png   "turn on Quiet Time" reminder
+#   04-meditation.png   running seduta, ~12 min elapsed (non-zero readout)
+#   05-summary.png      "Session ended", 12 min total, ripple bloom behind it
 #
 # Reproducibility tricks (no manual button cycling, no 12-minute wait):
 #   * config 30/10  — we wipe the emulator's persisted state so config_load()
@@ -81,14 +82,17 @@ pebble install --emulator "$PLATFORM" >/dev/null 2>&1 || {
 sleep 1.5
 
 log "capturing screens"
-shot 01-setup                 # config screen, 30 min · tick 10 min
+shot 01-home                  # home: Inizia · 30 min · tick 10 min + Down caret
+press down                    # Down -> settings menu (duration / tick interval)
+shot 02-settings
+press back                    # back to home
 press select                  # Start -> Quiet Time reminder (Quiet Time off in emu)
-shot 02-quiet-time
+shot 03-quiet-time
 press select                  # "Select = start anyway" -> running seduta (faked 12 min)
-shot 03-meditation
+shot 04-meditation
 press back                    # 1st back -> "Back = stop" confirm
 press back                    # 2nd back -> summary
-shot 04-summary
+shot 05-summary
 
 log "restoring a clean (non-screenshot) build"
 pebble build >/dev/null || die "clean rebuild failed"

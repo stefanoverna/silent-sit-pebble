@@ -3,3 +3,6 @@ build/
 node_modules/
 .DS_Store
 .lock-waf_*
+
+# Downloaded by tools/generate-pdc.sh
+tools/pdc_tool

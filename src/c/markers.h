@@ -6,7 +6,7 @@
 typedef struct {
   uint8_t duration_min;   // cycle length: 10|15|20|30|45|60
   uint8_t interval_min;   // periodic tick: 0|10|30  (0 = off)
-} VipassanaConfig;
+} SilentSitConfig;
 
 // What (if anything) happens at a given second of the seduta.
 typedef enum {
@@ -20,7 +20,7 @@ typedef enum {
 // `elapsed`. Everything — tick/half/end, the infinite loop, and collision
 // precedence (end > half > tick) — is derived here from absolute elapsed time,
 // so there is zero drift across long sedute.
-MarkerEvent marker_for_elapsed(int elapsed, VipassanaConfig cfg);
+MarkerEvent marker_for_elapsed(int elapsed, SilentSitConfig cfg);
 
 // The elapsed-second of the next marker strictly after `elapsed`, with its
 // event type written to *out_event (precedence applied, so a tick coinciding
@@ -28,4 +28,4 @@ MarkerEvent marker_for_elapsed(int elapsed, VipassanaConfig cfg);
 // This drives the battery-friendly scheduler: compute the next event, sleep an
 // app_timer until exactly then, fire, repeat — recomputing from absolute time
 // each step so timing never drifts.
-int next_marker_after(int elapsed, VipassanaConfig cfg, MarkerEvent *out_event);
+int next_marker_after(int elapsed, SilentSitConfig cfg, MarkerEvent *out_event);

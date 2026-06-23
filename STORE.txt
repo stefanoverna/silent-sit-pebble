@@ -1,13 +1,13 @@
-Vipassana — Silent, tactile meditation timer
+Silent Sit — Silent, tactile meditation timer
 
-Vipassana paces your sitting with vibrations alone. No bells, no sound, no screen to look at: you feel the rhythm on your wrist and keep your eyes closed.
+Silent Sit paces your sitting with vibrations alone. No bells, no sound, no screen to look at: you feel the rhythm on your wrist and keep your eyes closed.
 
 Made for people who meditate and want a timer that is discreet, always there, and speaks only through touch. A phone distracts and tempts you to look at the screen. Your wrist does not.
 
 HOW IT WORKS
 
 - Open-ended sittings: the duration you pick is not an end but a cycle that repeats for as long as you sit, without breaking the rhythm.
-- On open, your last-used setup is already selected: one tap and you start again like yesterday.
+- The home screen leads with Start, showing your last-used settings just beneath it: one tap and you begin again like yesterday. Press Down to adjust the duration or tick interval.
 - During the sitting the screen shows only the elapsed minutes, large and centred on a dark background. No countdown, no progress bar, no cycle counter to stare at.
 
 THE VIBRATIONS

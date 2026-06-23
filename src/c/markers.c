@@ -14,7 +14,7 @@
 //
 // Collision rule: the triple wins. If a periodic tick lands on the same second
 // as the half or the end, the single tick is suppressed.
-MarkerEvent marker_for_elapsed(int elapsed, VipassanaConfig cfg) {
+MarkerEvent marker_for_elapsed(int elapsed, SilentSitConfig cfg) {
   if (elapsed <= 0) return MARKER_NONE;
 
   int cycle = (int)cfg.duration_min * 60;
@@ -37,7 +37,7 @@ MarkerEvent marker_for_elapsed(int elapsed, VipassanaConfig cfg) {
 // the next end, the next half, and (if enabled) the next tick; the earliest of
 // them is the answer. The event type at that instant is taken from the pure
 // marker_for_elapsed(), so collision precedence is reused, not re-derived.
-int next_marker_after(int elapsed, VipassanaConfig cfg, MarkerEvent *out_event) {
+int next_marker_after(int elapsed, SilentSitConfig cfg, MarkerEvent *out_event) {
   int cycle = (int)cfg.duration_min * 60;
   if (cycle <= 0) { if (out_event) *out_event = MARKER_NONE; return -1; }
 

@@ -1,18 +1,17 @@
 {
-  "name": "vipassana",
+  "name": "silent-sit",
   "author": "Stefano Verna",
   "version": "1.0.0",
   "keywords": ["pebble-app"],
   "private": true,
   "dependencies": {},
   "pebble": {
-    "displayName": "Vipassana",
+    "displayName": "Silent Sit",
     "uuid": "4627b4df-239a-44d5-b05e-5e93a2904f80",
     "sdkVersion": "3",
     "enableMultiJS": true,
     "targetPlatforms": [
-      "emery",
-      "basalt"
+      "emery"
     ],
     "watchapp": {
       "watchface": false
@@ -27,14 +26,24 @@
           "menuIcon": true
         },
         {
-          "type": "bitmap",
+          "type": "raw",
           "name": "QUIET_TIME",
-          "file": "quiet_time.png"
+          "file": "quiet_time.pdc"
         },
         {
-          "type": "bitmap",
+          "type": "raw",
           "name": "ACTION_START",
-          "file": "action_start.png"
+          "file": "action_start.pdc"
+        },
+        {
+          "type": "raw",
+          "name": "CARET_DOWN",
+          "file": "caret_down.pdc"
+        },
+        {
+          "type": "font",
+          "name": "FONT_LECO_REGULAR_SUBSET_72",
+          "file": "fonts/leco_digits.ttf"
         }
       ]
     }

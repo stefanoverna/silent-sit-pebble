@@ -1,17 +1,17 @@
-# Vipassana
+# Silent Sit
 
 A silent, tactile meditation timer for Pebble. It marks a sitting with
 vibrations alone — no bells, no sound, no screen to look at. You feel the rhythm
 of the session on your wrist and keep your eyes closed.
 
-Built for **Pebble Time 2** (`emery`, 200×228 colour) and **basalt**, with the
-classic Pebble C SDK (SDK 3).
+Built for **Pebble Time 2** (`emery`, 200×228 colour) with the classic Pebble C
+SDK (SDK 3).
 
 ## Screenshots
 
-| Setup | Quiet Time | Sitting | Summary |
-|:-----:|:----------:|:-------:|:-------:|
-| <img src="screenshots/emery/01-setup.png" width="180"> | <img src="screenshots/emery/02-quiet-time.png" width="180"> | <img src="screenshots/emery/03-meditation.png" width="180"> | <img src="screenshots/emery/04-summary.png" width="180"> |
+| Home | Settings | Quiet Time | Sitting | Summary |
+|:----:|:--------:|:----------:|:-------:|:-------:|
+| <img src="screenshots/emery/01-home.png" width="180"> | <img src="screenshots/emery/02-settings.png" width="180"> | <img src="screenshots/emery/03-quiet-time.png" width="180"> | <img src="screenshots/emery/04-meditation.png" width="180"> | <img src="screenshots/emery/05-summary.png" width="180"> |
 
 <sub>Pebble Time 2 (`emery`). Regenerate any time with `tools/generate-screenshots.sh` — see [Build & run](#build--run).</sub>
 
@@ -27,13 +27,16 @@ that repeats for as long as you sit, without breaking the rhythm.
 
 ## How it works
 
-### Setup (before sitting)
+### Home & settings (before sitting)
 
-- On open, the app shows your **last-used configuration** already selected. A
-  single tap on **Select** starts the session right away — the common case
-  ("same as yesterday") is one gesture.
-- To change: **cycle duration** (10 / 15 / 20 / 30 / 45 / 60 min) and **tick
-  interval** (10 min / 30 min / off) adjust with up/down, then Select.
+- The **home screen** leads with the primary action — **▶ Start session** — and
+  shows your current configuration beneath it (e.g. `30 min, a tick every
+  10 min`). A single press of **Select** starts the sitting right away: the
+  common case ("same as yesterday") is one gesture.
+- Press **Down** to open **settings**, a short menu to **cycle duration**
+  (10 / 15 / 20 / 30 / 45 / 60 min) and **tick interval** (10 min / 30 min / off).
+  **Select** cycles a value; **Back** returns to the home screen with its summary
+  updated.
 - The configuration is **persisted** and survives closing the app and rebooting
   the watch.
 
@@ -97,7 +100,8 @@ drift** across long sittings.
 | File                    | Responsibility                                        |
 |-------------------------|-------------------------------------------------------|
 | `src/c/main.c`          | config (load/save) and the navigation router          |
-| `src/c/setup_window.c`  | pre-session config (duration / interval / start)      |
+| `src/c/setup_window.c`  | home screen (Start action + config summary + Down)    |
+| `src/c/settings_window.c`| the duration / tick-interval menu (reached with Down) |
 | `src/c/quiet_window.c`  | the "turn on Quiet Time" reminder                     |
 | `src/c/session_window.c`| the running session, confirm-stop, summary            |
 | `src/c/markers.c`       | the pure cycle/tick/half/end scheduler                |
@@ -115,6 +119,7 @@ Requires the Pebble SDK (`pebble` CLI + QEMU emulator).
 pebble build                          # compile (waf / wscript)
 pebble install --emulator emery       # run in the emulator
 pebble install --phone <ip>           # install on a watch
+pebble install --cloudpebble          # install via the CloudPebble connection
 ```
 
 There is no unit-test framework for Pebble: verify by running in the emulator
@@ -124,17 +129,16 @@ checked by compiling `markers.c` on the host.)
 ### Regenerating the store screenshots
 
 ```sh
-tools/generate-screenshots.sh           # default: emery
-tools/generate-screenshots.sh basalt    # any target platform
+tools/generate-screenshots.sh           # emery (the only target platform)
 ```
 
-The script captures the four representative screens into
+The script captures the five representative screens into
 `screenshots/<platform>/` with **zero manual clicks**, using two tricks to stay
 reproducible:
 
-- **config `30 min · tick 10 min`** — it wipes the emulator's persisted state so
-  the config falls back to the built-in defaults (`DEFAULT_DURATION` /
-  `DEFAULT_INTERVAL`), instead of cycling buttons.
+- **default config (`30 min, a tick every 10 min`)** — it wipes the emulator's
+  persisted state so the config falls back to the built-in defaults
+  (`DEFAULT_DURATION` / `DEFAULT_INTERVAL`), instead of cycling buttons.
 - **a non-zero `12 minutes` readout** — it builds with
   `SCREENSHOT_FAKE_ELAPSED=720`, which `wscript` turns into a `-D` define that
   back-dates the session start by 12 min. The macro is `#ifdef`-guarded in
@@ -144,6 +148,27 @@ reproducible:
 It also hard-resets the flaky pypkjs↔QEMU relay and retries on `TimeoutError`,
 so it's safe to re-run.
 
+### Regenerating the icon resources
+
+The in-window glyphs — the home-screen play `▶` and Down caret, and the Quiet
+Time mouse — are **Pebble Draw Command (PDC) vectors**, not bitmaps, so they
+stay crisp at any size. Their SVG masters live in `resources/` (`action_start.svg`,
+`caret_down.svg`, `quiet_time_mouse.svg`); the compiled `*.pdc` files are checked
+in. Edit a master, then:
+
+```sh
+tools/generate-pdc.sh                    # re-converts all three SVGs -> *.pdc
+```
+
+Conversion uses [`pdc_tool`](https://github.com/HBehrens/pdc_tool) (a single
+binary). The script finds it on `PATH` / in `tools/`, or **downloads the matching
+release into `tools/` on demand** (gitignored) if it's missing — so a fresh
+checkout needs nothing pre-installed. The glyphs are authored white for the dark
+UI; the mouse keeps its black outline (legible on the indigo Quiet Time
+background) and converts at its native 80px — PDC has no draw-time scaling, so
+downscaling it would smear the thin strokes. The menu icon (`resources/icon.png`)
+stays a bitmap — Pebble menu icons can't be PDC.
+
 ## Scope
 
 In: silent tactile timer, looping cycles, periodic/half/end markers, persisted
@@ -151,8 +176,3 @@ preset, Quiet-Time detection, stop-with-summary.
 
 Out (deliberately): audio/bells, statistics/streaks/history, accounts/cloud, a
 complex phone companion, visible countdown or cycle count, guided content.
-
-## Project docs
-
-- `PITCH.md` — Shape Up pitch (problem, solution, rabbit holes, no-gos).
-- `SCOPING.md` — scoping notes.

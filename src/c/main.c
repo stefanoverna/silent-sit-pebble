@@ -1,19 +1,21 @@
 #include <pebble.h>
 #include "app.h"
 #include "setup_window.h"
+#include "settings_window.h"
 #include "session_window.h"
 #include "quiet_window.h"
 #include "locale.h"
 
-// Vipassana — a silent, tactile meditation timer for Pebble.
+// Silent Sit — a silent, tactile meditation timer for Pebble.
 //
 // main.c owns the config and the navigation router. The screens live in:
-//   setup_window.c    pre-seduta config (durata / intervallo / Inizia)
+//   setup_window.c    home screen (title / Inizia / config summary)
+//   settings_window.c the durata / intervallo menu (reached with Down)
 //   quiet_window.c    "turn on Quiet Time" reminder
 //   session_window.c  the running seduta + confirm-stop + summary
 //   markers.c         the pure cycle/tick/half/end scheduler
 
-VipassanaConfig g_config;
+SilentSitConfig g_config;
 
 static void config_load(void) {
   g_config.duration_min = persist_exists(PKEY_DURATION)
@@ -47,6 +49,7 @@ static void deinit(void) {
   config_save();
   session_window_deinit();
   quiet_window_deinit();
+  settings_window_deinit();
   setup_window_deinit();
 }
 

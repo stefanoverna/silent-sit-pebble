@@ -27,6 +27,7 @@ static Window    *s_window;
 static TextLayer *s_time_layer;     // very large elapsed-minutes number
 static TextLayer *s_unit_layer;     // the word "minuti" under the number
 static TextLayer *s_status_layer;   // small line: Quiet Time / confirm prompt
+static GFont      s_time_font;       // custom LECO font for the minutes number
 
 static SessionState s_state;
 static time_t  s_start_time;        // time(NULL) at start — the drift anchor
@@ -35,6 +36,7 @@ static bool    s_quiet_active;      // Quiet Time on at start -> show indicator
 static AppTimer *s_confirm_timer;   // auto-cancels the CONFIRM prompt
 static AppTimer *s_marker_timer;    // fires at the next cycle marker
 static MarkerEvent s_next_event;    // the marker s_marker_timer will deliver
+static Animation *s_summary_anim;   // the "breath" played when SUMMARY appears
 
 static char s_time_buf[16];         // backs s_time_layer (must outlive the call)
 
@@ -120,6 +122,81 @@ static void marker_timer_cb(void *data) {
   schedule_next_marker();      // re-arm from absolute time -> self-correcting
 }
 
+// --- Summary "breath" (an expanding ripple behind the number) -----------------
+// When the seduta ends, a single circle blooms outward from the centre and
+// dissipates — one slow exhale, rendered behind the total. Pebble has no fill
+// alpha, so the fade is faked by stepping the stroke colour toward the black
+// background (greys on colour models; on 1-bit the ring just thins out and
+// stops). s_breath_pct holds animation progress, or -1 when nothing should draw.
+
+static Layer *s_circle_layer;
+static int    s_breath_pct = -1;
+
+static void circle_update_proc(Layer *layer, GContext *ctx) {
+  if (s_breath_pct < 0) return;
+
+  GRect b = layer_get_bounds(layer);
+  GPoint center = grect_center_point(&b);
+
+  // Grow from the centre to just past the far corner so the ring fully clears.
+  int max_r  = (b.size.w + b.size.h) / 2;
+  int radius = (max_r * s_breath_pct) / 100;
+  if (radius < 1) return;
+
+#ifdef PBL_COLOR
+  // Fade the stroke from a soft grey toward black as the ring expands.
+  uint8_t lum = (uint8_t)((220 * (100 - s_breath_pct)) / 100);
+  graphics_context_set_stroke_color(ctx, GColorFromRGB(lum, lum, lum));
+#else
+  // 1-bit: no greys to fade through — draw only the first ~70% so the ring
+  // appears to dissipate before it reaches the edges.
+  if (s_breath_pct > 70) return;
+  graphics_context_set_stroke_color(ctx, GColorWhite);
+#endif
+  // Stroke thickens as the ring expands, so the bloom feels like it swells.
+  graphics_context_set_stroke_width(ctx, (uint8_t)(1 + (16 * s_breath_pct) / 100));
+  graphics_draw_circle(ctx, center, radius);
+}
+
+static void breath_update(Animation *anim, const AnimationProgress progress) {
+  s_breath_pct = (int)(((int32_t)progress * 100) / ANIMATION_NORMALIZED_MAX);
+  if (s_circle_layer) layer_mark_dirty(s_circle_layer);
+}
+
+static void breath_teardown(Animation *anim) {
+  s_breath_pct = -1;                 // stop drawing once the bloom is done
+  if (s_circle_layer) layer_mark_dirty(s_circle_layer);
+}
+
+static void breath_stopped(Animation *anim, bool finished, void *ctx) {
+  s_summary_anim = NULL;             // framework auto-destroys the animation
+}
+
+static const AnimationImplementation s_breath_impl = {
+  .update   = breath_update,
+  .teardown = breath_teardown,
+};
+
+static void play_summary_breath(void) {
+#ifdef SCREENSHOT_FAKE_ELAPSED
+  // Store screenshots are stills: freeze the ripple at a representative point in
+  // its bloom instead of racing the live animation against capture latency.
+  // Guarded by the same screenshot-only macro as the faked elapsed time, so a
+  // normal build always plays the full animation.
+  s_breath_pct = 40;
+  if (s_circle_layer) layer_mark_dirty(s_circle_layer);
+  return;
+#endif
+  s_breath_pct = -1;
+  s_summary_anim = animation_create();
+  animation_set_implementation(s_summary_anim, &s_breath_impl);
+  animation_set_curve(s_summary_anim, AnimationCurveEaseOut);
+  animation_set_duration(s_summary_anim, 3200);
+  animation_set_handlers(s_summary_anim,
+                         (AnimationHandlers){ .stopped = breath_stopped }, NULL);
+  animation_schedule(s_summary_anim);
+}
+
 // --- Stop / summary -----------------------------------------------------------
 
 static void enter_summary(void) {
@@ -134,6 +211,8 @@ static void enter_summary(void) {
   snprintf(s_time_buf, sizeof(s_time_buf), "%d", total_min);   // number only
   text_layer_set_text(s_time_layer, s_time_buf);
   show_status(L(MSG_SESSION_ENDED));
+
+  play_summary_breath();   // a single ripple blooms behind the total
 }
 
 static void confirm_timeout(void *data) {
@@ -190,21 +269,41 @@ static void window_load(Window *window) {
   Layer *root = window_get_root_layer(window);
   GRect bounds = layer_get_bounds(root);
 
+  // Background ripple, added first so it draws behind every text layer. Idle
+  // (draws nothing) until the seduta ends and play_summary_breath() runs.
+  s_breath_pct = -1;
+  s_circle_layer = layer_create(bounds);
+  layer_set_update_proc(s_circle_layer, circle_update_proc);
+  layer_add_child(root, s_circle_layer);
+
   // Huge elapsed-minutes number, with the word "minuti" right below it. The
-  // number uses the largest system numeric font (digits only); the pair is
-  // centred as a group in the upper two-thirds (status line sits at the bottom).
-  const int num_h  = 58;
-  const int unit_h = 30;
-  int group_top = (bounds.size.h - (num_h + unit_h)) / 2 - 10;
+  // number uses the custom LECO font (digits-only subset) at 72px.
+  //
+  // That font renders with ~18px of blank space above the digit ink and a
+  // baseline ~68px below the layer top (visible cap height ~50px). The time
+  // layer must stay at the full 86px line height so glyphs never clip — but if
+  // we put "minuti" directly under that tall box it floats far below the number.
+  // So we anchor the label near the number's baseline instead, and center the
+  // *visible* block (digit ink + label) on screen rather than the layer boxes.
+  const int num_h    = 87;   // digit line-height box (>= 86 so nothing clips)
+  const int unit_h   = 30;
+  const int ink_top  = 18;   // blank space above the digit ink within num_h
+  const int baseline = 68;   // digit baseline offset within num_h
+  const int unit_off = baseline + 6;   // sit the label just below the baseline
+
+  // Visible block: from the digit ink top down to the label's caps (~23px).
+  int block_h   = (unit_off + 23) - ink_top;
+  int group_top = (bounds.size.h - block_h) / 2 - ink_top;
 
   s_time_layer = text_layer_create(GRect(0, group_top, bounds.size.w, num_h));
   text_layer_set_background_color(s_time_layer, GColorClear);
   text_layer_set_text_color(s_time_layer, GColorWhite);
-  text_layer_set_font(s_time_layer, fonts_get_system_font(FONT_KEY_ROBOTO_BOLD_SUBSET_49));
+  s_time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_LECO_REGULAR_SUBSET_72));
+  text_layer_set_font(s_time_layer, s_time_font);
   text_layer_set_text_alignment(s_time_layer, GTextAlignmentCenter);
   layer_add_child(root, text_layer_get_layer(s_time_layer));
 
-  s_unit_layer = text_layer_create(GRect(0, group_top + num_h, bounds.size.w, unit_h));
+  s_unit_layer = text_layer_create(GRect(0, group_top + unit_off, bounds.size.w, unit_h));
   text_layer_set_background_color(s_unit_layer, GColorClear);
   text_layer_set_text_color(s_unit_layer, PBL_IF_COLOR_ELSE(GColorLightGray, GColorWhite));
   text_layer_set_font(s_unit_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
@@ -245,9 +344,14 @@ static void window_unload(Window *window) {
   tick_timer_service_unsubscribe();
   if (s_marker_timer)  { app_timer_cancel(s_marker_timer);  s_marker_timer = NULL; }
   if (s_confirm_timer) { app_timer_cancel(s_confirm_timer); s_confirm_timer = NULL; }
+  // Stop the ripple (fires teardown synchronously) before its layer is freed.
+  if (s_summary_anim) { animation_unschedule(s_summary_anim); s_summary_anim = NULL; }
+  layer_destroy(s_circle_layer);
+  s_circle_layer = NULL;
   text_layer_destroy(s_time_layer);
   text_layer_destroy(s_unit_layer);
   text_layer_destroy(s_status_layer);
+  fonts_unload_custom_font(s_time_font);
 }
 
 void session_window_push(void) {

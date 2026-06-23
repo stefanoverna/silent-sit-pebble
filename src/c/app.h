@@ -10,7 +10,7 @@
 #define DEFAULT_INTERVAL 10   // minutes
 
 // The single source of truth for the session config, owned by main.c.
-extern VipassanaConfig g_config;
+extern SilentSitConfig g_config;
 
 // Persist g_config to storage. Called on every change in the setup screen.
 void config_save(void);

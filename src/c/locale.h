@@ -12,10 +12,13 @@ typedef enum {
   MSG_QUIET_ACTIVE,    // status line when Quiet Time is on
   MSG_CONFIRM_STOP,    // status line after BACK once
   MSG_SESSION_ENDED,   // summary status line
-  MSG_START,           // setup row 0 title
-  MSG_DURATION,        // setup row 1 title (expected session length)
-  MSG_TICK_INTERVAL,   // setup row 2 title
-  MSG_QUIET_BODY,      // Quiet-Time reminder body
+  MSG_START,           // home screen action, incl. the noun ("Inizia seduta")
+  MSG_HOME_SUMMARY,    // home config line, fmt(duration, interval): "30 min, a tick every 10 min"
+  MSG_HOME_SUMMARY_OFF,// home config line when ticks are off, fmt(duration): "30 min, no ticks"
+  MSG_DURATION,        // settings row: expected session length
+  MSG_TICK_INTERVAL,   // settings row: tick interval
+  MSG_QUIET_TITLE,     // Quiet-Time reminder headline ("Turn on Quiet Time")
+  MSG_QUIET_BODY,      // Quiet-Time reminder body (the reason)
   MSG_QUIET_HINT,      // Quiet-Time reminder hint
   MSG_COUNT
 } MsgId;
