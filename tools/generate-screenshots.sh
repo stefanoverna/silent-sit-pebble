@@ -2,12 +2,16 @@
 #
 # generate-screenshots.sh — reproducibly capture the Silent Sit store screenshots.
 #
-# Produces, under screenshots/<platform>/, the five representative screens:
-#   01-home.png         home screen: Inizia · 30 min · tick 10 min + Down caret
-#   02-settings.png     settings menu (duration / tick interval)
-#   03-quiet-time.png   "turn on Quiet Time" reminder
-#   04-meditation.png   running seduta, ~12 min elapsed (non-zero readout)
-#   05-summary.png      "Session ended", 12 min total, ripple bloom behind it
+# Produces, under screenshots/<platform>/, the five representative screens.
+# Files are named "<platform>_NN-name.png" so they are directly publishable:
+# `pebble publish` infers the platform from the basename's "<platform>_" prefix
+# (it splits the basename on the first "_"), so `--screenshots
+# screenshots/emery/*.png` works with no renaming.
+#   emery_01-home.png         home screen: Inizia · 30 min · tick 10 min + Down caret
+#   emery_02-settings.png     settings menu (duration / tick interval)
+#   emery_03-quiet-time.png   "turn on Quiet Time" reminder
+#   emery_04-meditation.png   running seduta, ~12 min elapsed (non-zero readout)
+#   emery_05-summary.png      "Session ended", 12 min total, ripple bloom behind it
 #
 # Reproducibility tricks (no manual button cycling, no 12-minute wait):
 #   * config 30/10  — we wipe the emulator's persisted state so config_load()
@@ -55,7 +59,9 @@ wipe_persist() {
 press() { pebble emu-button click "$1" >/dev/null 2>&1; sleep "${2:-0.9}"; }
 
 shot() {  # shot <name> — retry through the transient TimeoutError
-  local name="$1" tries=0
+  # Name files "<platform>_<name>.png" so `pebble publish` can infer the
+  # platform from the filename (it splits the basename on the first "_").
+  local name="${PLATFORM}_$1" tries=0
   until pebble screenshot "$OUT/$name.png" --no-open >/dev/null 2>&1; do
     tries=$((tries + 1))
     [ "$tries" -ge 6 ] && die "screenshot '$name' kept timing out (host load? check uptime)"

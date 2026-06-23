@@ -11,7 +11,7 @@ SDK (SDK 3).
 
 | Home | Settings | Quiet Time | Sitting | Summary |
 |:----:|:--------:|:----------:|:-------:|:-------:|
-| <img src="screenshots/emery/01-home.png" width="180"> | <img src="screenshots/emery/02-settings.png" width="180"> | <img src="screenshots/emery/03-quiet-time.png" width="180"> | <img src="screenshots/emery/04-meditation.png" width="180"> | <img src="screenshots/emery/05-summary.png" width="180"> |
+| <img src="screenshots/emery/emery_01-home.png" width="180"> | <img src="screenshots/emery/emery_02-settings.png" width="180"> | <img src="screenshots/emery/emery_03-quiet-time.png" width="180"> | <img src="screenshots/emery/emery_04-meditation.png" width="180"> | <img src="screenshots/emery/emery_05-summary.png" width="180"> |
 
 <sub>Pebble Time 2 (`emery`). Regenerate any time with `tools/generate-screenshots.sh` — see [Build & run](#build--run).</sub>
 
@@ -125,6 +125,54 @@ pebble install --cloudpebble          # install via the CloudPebble connection
 There is no unit-test framework for Pebble: verify by running in the emulator
 and taking screenshots. (The marker logic, being a pure function, can also be
 checked by compiling `markers.c` on the host.)
+
+## Publishing to the appstore
+
+The app is published to the [rePebble appstore](https://apps.rePebble.com/9170d8ea82e842e6b0abdbe3)
+(`appstore-api.repebble.com`) with the `pebble publish` command. One-time auth:
+
+```sh
+pebble login                            # Firebase auth (opens a browser)
+pebble login --status                   # confirm you're logged in + dev link
+```
+
+Then publish. The store description lives in `STORE.txt`, the listing
+screenshots in `screenshots/emery/`:
+
+```sh
+pebble publish \
+  --non-interactive \
+  --name "Silent Sit" \
+  --version 1.0.0 \
+  --category health \
+  --description "$(cat STORE.txt)" \
+  --release-notes "First release" \
+  --icon-small resources/icon.png \
+  --screenshots screenshots/emery/emery_*.png \
+  --no-gif-all-platforms
+```
+
+`pebble publish` builds the `.pbw`, creates (or updates) the appstore listing,
+and uploads the release. It auto-generates a large icon from `icon-small` when
+`--icon-large` is omitted. The web dashboard at `appstore-api.repebble.com/dashboard`
+is the equivalent for editing the listing afterwards.
+
+Three things that will otherwise bite you:
+
+- **Screenshot filenames must start with `<platform>_`** (underscore). The tool
+  infers the platform by splitting the *basename* on the first `_` — the
+  containing folder is ignored. `screenshots/emery/emery_01-home.png` works;
+  `…/01-home.png` fails with *"Could not infer platform"*. `generate-screenshots.sh`
+  already names them this way. Screenshots are mandatory.
+- **`--category` must be one of** `daily`, `tools`, `notifications`, `remotes`,
+  `health`, `games` (aliases: `fitness`→`health`, `game`→`games`, …). Anything
+  else (e.g. `"Health & Fitness"`) is sent verbatim and the backend answers
+  *500 Failed to create app record*. Silent Sit uses `health`.
+- **Each release version must be unique and increasing.** Re-running with an
+  already-published `--version` fails *400 Version X already exists*; bump
+  `version` in `package.json` (and the command above) for every new release.
+  The release is made publicly visible on upload — there is no separate
+  "publish" toggle in the CLI.
 
 ### Regenerating the store screenshots
 
