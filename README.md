@@ -32,13 +32,16 @@ that repeats for as long as you sit, without breaking the rhythm.
 - The **home screen** leads with the primary action — **▶ Start session** — and
   shows your current configuration beneath it (e.g. `30 min, a tick every
   10 min`). A single press of **Select** starts the sitting right away: the
-  common case ("same as yesterday") is one gesture.
-- Press **Down** to open **settings**, a short menu to **cycle duration**
-  (10 / 15 / 20 / 30 / 45 / 60 min) and **tick interval** (10 min / 30 min / off).
-  **Select** cycles a value; **Back** returns to the home screen with its summary
-  updated.
-- The configuration is **persisted** and survives closing the app and rebooting
-  the watch.
+  common case ("same as yesterday") is one gesture. The small title at the top
+  quietly alternates between the app name and your lifetime total of time
+  meditated with the app.
+- Press **Down** to open **settings**, a short menu to cycle the **duration**
+  (10 / 15 / 20 / 30 / 45 / 60 min), **tick interval** (10 min / 30 min / off),
+  and **vibration strength** (Light / Medium / Strong). **Select** cycles a
+  value; **Back** returns to the home screen with its summary updated. A final
+  row resets the lifetime total — a two-press confirm guards against a stray tap.
+- The configuration and the lifetime total are **persisted** and survive closing
+  the app and rebooting the watch.
 
 ### During the sitting
 
@@ -59,8 +62,11 @@ that repeats for as long as you sit, without breaking the rhythm.
 
 The three patterns are deliberately distinct in rhythm (intensity is fixed by
 hardware), so mid-cycle and end-of-cycle are never confused with eyes closed.
-At the end of a cycle the markers reset and the cycle begins again, while the
-total timer keeps running.
+The **vibration strength** setting (Light / Medium / Strong, default Medium)
+lengthens the buzzes — stretching the pulses while leaving the gaps untouched —
+so each marker keeps its rhythm and only feels more emphatic. At the end of a
+cycle the markers reset and the cycle begins again, while the total timer keeps
+running.
 
 ### Quiet Time
 
@@ -77,7 +83,8 @@ the whole point of the app. Quiet Time only silences *external* notifications.
 ### Stopping
 
 The Back button stops the session **with confirmation**, so you don't leave a
-sitting by accident, then shows a summary of the total time.
+sitting by accident, then shows a summary of the total time, its status line
+alternating with your lifetime total.
 
 ## Localization
 
@@ -99,9 +106,9 @@ drift** across long sittings.
 
 | File                    | Responsibility                                        |
 |-------------------------|-------------------------------------------------------|
-| `src/c/main.c`          | config (load/save) and the navigation router          |
+| `src/c/main.c`          | config + lifetime total (load/save) and the navigation router |
 | `src/c/setup_window.c`  | home screen (Start action + config summary + Down)    |
-| `src/c/settings_window.c`| the duration / tick-interval menu (reached with Down) |
+| `src/c/settings_window.c`| the settings menu — duration, tick, vibration, reset (reached with Down) |
 | `src/c/quiet_window.c`  | the "turn on Quiet Time" reminder                     |
 | `src/c/session_window.c`| the running session, confirm-stop, summary            |
 | `src/c/markers.c`       | the pure cycle/tick/half/end scheduler                |
@@ -219,8 +226,9 @@ stays a bitmap — Pebble menu icons can't be PDC.
 
 ## Scope
 
-In: silent tactile timer, looping cycles, periodic/half/end markers, persisted
-preset, Quiet-Time detection, stop-with-summary.
+In: silent tactile timer, looping cycles, periodic/half/end markers, adjustable
+vibration strength, persisted preset, a single lifetime total, Quiet-Time
+detection, stop-with-summary.
 
-Out (deliberately): audio/bells, statistics/streaks/history, accounts/cloud, a
+Out (deliberately): audio/bells, streaks/history/charts, accounts/cloud, a
 complex phone companion, visible countdown or cycle count, guided content.
