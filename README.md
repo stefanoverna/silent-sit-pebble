@@ -172,6 +172,11 @@ lists) and `resources/marketplace_large.png` (144×144, the detailed droplet wit
 ripples). They have no committed masters; regenerate them from the image-generator
 prompts and downscale recipe in [`resources/marketplace-icons.md`](resources/marketplace-icons.md).
 
+The store **header banner** (`resources/marketplace_banner.png`, exactly
+720×320) is *not* set by `pebble publish` — upload it by hand from the appstore
+dashboard's "Upload New Banner". Its prompt and recipe live in the same
+[`marketplace-icons.md`](resources/marketplace-icons.md).
+
 If `--icon-large` is omitted, `pebble publish` instead auto-generates a large icon
 from `--icon-small`.
 

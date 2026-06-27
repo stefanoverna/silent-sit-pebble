@@ -91,3 +91,63 @@ water, splash droplets, busy, cluttered, noisy texture, harsh shadow,
 rounded corners, frame, border, multiple droplets, distorted teardrop,
 low contrast, muddy colors, oversaturated
 ```
+
+---
+
+## Listing banner (→ `marketplace_banner.png`, 720×320)
+
+The store header banner is **not** set by `pebble publish` — upload it manually
+from the appstore dashboard ("Upload New Banner"). It must be **exactly
+720×320 px**. The publish-ready PNG is committed; no master is kept.
+
+The text ("Silent Sit" / "A beat on your wrist") is baked into the prompt —
+generators usually spell short strings right, but **double-check the output**.
+If the lettering comes out garbled, generate text-free and typeset it afterwards.
+
+Generate at 1440×640 (2.25:1, 2×), then downscale and centre-crop to exact size:
+
+```sh
+magick <generated-banner>.jpg -filter Lanczos -resize x320 -gravity center -extent 720x320 -strip resources/marketplace_banner.png
+```
+
+Prompt:
+
+```
+Wide horizontal app store banner for a meditation app, 2.25:1 aspect ratio.
+
+LEFT SIDE: a single glossy white water droplet (classic teardrop shape)
+with a soft highlight and faint inner glow, positioned in the left third.
+From its base, concentric ripple rings radiate outward in lighter
+translucent indigo and soft white, suggesting a calm vibration.
+
+RIGHT SIDE: clean text, crisp and perfectly legible, in a modern
+geometric sans-serif, pure white #FFFFFF, left-aligned, vertically
+centered. A large bold title reading exactly "Silent Sit" on one line,
+and directly below it a smaller lighter-weight tagline reading exactly
+"A beat on your wrist". Correct spelling, evenly spaced letters, no extra
+words.
+
+BACKGROUND: a smooth indigo gradient, brighter around the droplet fading
+to deeper darker indigo toward the edges, base color hex #5500AA.
+Full-bleed, edge to edge, no border, no rounded corners. Soft luminous
+halo behind the droplet.
+
+STYLE: modern, premium, serene, meditative. Clean vector-like shapes,
+subtle gradients, soft glows, high contrast, balanced and uncluttered.
+No watch render, no device frame, no harsh shadows, no photorealistic
+water, no splashes.
+
+FORMAT: a wide rectangular image, exactly 1440 x 640 pixels (2.25:1),
+full-bleed background, no transparency.
+```
+
+Negative prompt:
+
+```
+misspelled text, garbled text, gibberish letters, extra words, random
+characters, duplicated text, distorted typography, watermark, logo, ui,
+smartwatch render, device frame, photorealistic, realistic water, splash
+droplets, busy, cluttered, noisy texture, harsh shadow, rounded corners,
+frame, border, multiple droplets, distorted teardrop, low contrast, muddy
+colors, oversaturated, square crop
+```
