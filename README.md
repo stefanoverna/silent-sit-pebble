@@ -175,6 +175,19 @@ prompts and downscale recipe in [`resources/marketplace-icons.md`](resources/mar
 If `--icon-large` is omitted, `pebble publish` instead auto-generates a large icon
 from `--icon-small`.
 
+### Tag each release
+
+After a successful publish, tag the released commit so the appstore version maps
+to a point in history, then push the tag:
+
+```sh
+git tag -a v1.1.0 -m "Silent Sit 1.1.0"   # match the published --version
+git push origin main --follow-tags         # push commits and the new tag(s)
+```
+
+Tags are named `vX.Y.Z`, matching `version` in `package.json` and the
+`--version` passed to `pebble publish`.
+
 Three things that will otherwise bite you:
 
 - **Screenshot filenames must start with `<platform>_`** (underscore). The tool
