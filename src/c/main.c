@@ -17,6 +17,10 @@
 
 SilentSitConfig g_config;
 
+// Lifetime meditation total, in seconds. Loaded at startup, bumped whenever a
+// seduta ends, and persisted on each change so it survives app close / reboot.
+static uint32_t s_total_seconds;
+
 static void config_load(void) {
   g_config.duration_min = persist_exists(PKEY_DURATION)
       ? (uint8_t)persist_read_int(PKEY_DURATION) : DEFAULT_DURATION;
@@ -24,6 +28,32 @@ static void config_load(void) {
       ? (uint8_t)persist_read_int(PKEY_INTERVAL) : DEFAULT_INTERVAL;
   g_config.vibe_strength = persist_exists(PKEY_STRENGTH)
       ? (uint8_t)persist_read_int(PKEY_STRENGTH) : DEFAULT_STRENGTH;
+  s_total_seconds = persist_exists(PKEY_TOTAL_SECS)
+      ? (uint32_t)persist_read_int(PKEY_TOTAL_SECS) : 0;
+}
+
+void meditation_add_seconds(uint32_t seconds) {
+  s_total_seconds += seconds;
+  persist_write_int(PKEY_TOTAL_SECS, (int32_t)s_total_seconds);
+}
+
+uint32_t meditation_total_seconds(void) {
+  return s_total_seconds;
+}
+
+void meditation_format_total(char *buf, size_t size) {
+  int mins = (int)(s_total_seconds / 60);
+  if (mins < 60) {
+    snprintf(buf, size, L(MSG_TOTAL_MIN), mins);   // "Hai meditato per 43 min"
+    return;
+  }
+  // An hour or more: show decimal hours ("12,5 ore"), rounded to a tenth.
+  int h = mins / 60;
+  int tenths = ((mins % 60) * 10 + 30) / 60;   // round to nearest 0.1 h
+  if (tenths >= 10) { h++; tenths = 0; }        // carry e.g. 1.95 h -> 2.0 h
+  char num[12];
+  snprintf(num, sizeof(num), "%d%s%d", h, locale_decimal_sep(), tenths);
+  snprintf(buf, size, L(MSG_TOTAL_HOURS), num);   // "Hai meditato per 12,5 ore"
 }
 
 void config_save(void) {

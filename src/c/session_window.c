@@ -37,10 +37,14 @@ static AppTimer *s_confirm_timer;   // auto-cancels the CONFIRM prompt
 static AppTimer *s_marker_timer;    // fires at the next cycle marker
 static MarkerEvent s_next_event;    // the marker s_marker_timer will deliver
 static Animation *s_summary_anim;   // the "breath" played when SUMMARY appears
+static AppTimer *s_status_swap_timer; // alternates the summary status line
+static bool      s_status_showing_total;
 
 static char s_time_buf[16];         // backs s_time_layer (must outlive the call)
+static char s_status_total[48];     // backs the status line while it shows the total
 
 #define CONFIRM_TIMEOUT_MS 4000
+#define SUMMARY_SWAP_MS    5000   // cadence of the "Session ended" <-> total swap
 
 // --- Vibration patterns (calibrated in slice 3: light but perceptible) -------
 
@@ -232,18 +236,41 @@ static void play_summary_breath(void) {
 
 // --- Stop / summary -----------------------------------------------------------
 
+// Toggle the summary status line between "Session ended" and the lifetime total,
+// re-arming itself every SUMMARY_SWAP_MS for as long as the summary is showing.
+static void summary_status_swap(void *data) {
+  s_status_swap_timer = NULL;
+  if (s_state != S_SUMMARY) return;
+  if (s_status_showing_total) {
+    show_status(L(MSG_SESSION_ENDED));
+  } else {
+    meditation_format_total(s_status_total, sizeof(s_status_total));
+    show_status(s_status_total);
+  }
+  s_status_showing_total = !s_status_showing_total;
+  s_status_swap_timer = app_timer_register(SUMMARY_SWAP_MS, summary_status_swap, NULL);
+}
+
 static void enter_summary(void) {
   tick_timer_service_unsubscribe();
   if (s_marker_timer)  { app_timer_cancel(s_marker_timer);  s_marker_timer = NULL; }
   if (s_confirm_timer) { app_timer_cancel(s_confirm_timer); s_confirm_timer = NULL; }
 
-  int total_min = (int)(time(NULL) - s_start_time) / 60;
+  int elapsed_sec = (int)(time(NULL) - s_start_time);
+  if (elapsed_sec < 0) elapsed_sec = 0;
+  meditation_add_seconds((uint32_t)elapsed_sec);   // fold into the lifetime tally
+
+  int total_min = elapsed_sec / 60;
   s_state = S_SUMMARY;
 
   s_last_shown_min = -1;  // force the layer to accept the summary text
   snprintf(s_time_buf, sizeof(s_time_buf), "%d", total_min);   // number only
   text_layer_set_text(s_time_layer, s_time_buf);
   show_status(L(MSG_SESSION_ENDED));
+
+  // Begin alternating the status line with the lifetime total.
+  s_status_showing_total = false;
+  s_status_swap_timer = app_timer_register(SUMMARY_SWAP_MS, summary_status_swap, NULL);
 
   play_summary_breath();   // a single ripple blooms behind the total
 }
@@ -344,7 +371,8 @@ static void window_load(Window *window) {
   text_layer_set_text(s_unit_layer, L(MSG_UNIT_MINUTES));
   layer_add_child(root, text_layer_get_layer(s_unit_layer));
 
-  // Small status line near the bottom.
+  // Small status line near the bottom. Holds the short prompts and, on the
+  // summary, the one-line "Hai meditato per …" total (fits at this width).
   s_status_layer = text_layer_create(
       GRect(0, bounds.size.h - 30, bounds.size.w, 24));
   text_layer_set_background_color(s_status_layer, GColorClear);
@@ -377,6 +405,7 @@ static void window_unload(Window *window) {
   tick_timer_service_unsubscribe();
   if (s_marker_timer)  { app_timer_cancel(s_marker_timer);  s_marker_timer = NULL; }
   if (s_confirm_timer) { app_timer_cancel(s_confirm_timer); s_confirm_timer = NULL; }
+  if (s_status_swap_timer) { app_timer_cancel(s_status_swap_timer); s_status_swap_timer = NULL; }
   // Stop the ripple (fires teardown synchronously) before its layer is freed.
   if (s_summary_anim) { animation_unschedule(s_summary_anim); s_summary_anim = NULL; }
   layer_destroy(s_circle_layer);

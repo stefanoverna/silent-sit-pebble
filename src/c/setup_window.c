@@ -5,7 +5,7 @@
 
 // The home screen — the app's root window.
 //
-//   Silent Sit                (small title, top)
+//   Silent Sit                (small title, top — swaps with the lifetime total)
 //
 //      ▶ Inizia               (▶ glyph + action verb, centred as one unit)
 //   30 min, with a tick        (current config, smaller, wraps to two lines)
@@ -36,6 +36,40 @@ static void caret_update(Layer *layer, GContext *ctx) {
 // Holds the natural-language summary, e.g. "30 min session, with a tick every
 // 10 min" — wide enough for the longest localized phrasing.
 static char s_summary[64];
+
+// The title alternates between the app name and the lifetime meditation total
+// (e.g. "2h 05m") every TITLE_SWAP_MS, driven by a self-rescheduling timer that
+// only runs while the home screen is on top. s_title_total backs the layer.
+#define TITLE_SWAP_MS 5000
+#define TITLE_NAME    "Silent Sit"
+static AppTimer *s_title_timer;
+static bool      s_title_showing_total;
+static char      s_title_total[48];
+
+// Fill `buf` with the lifetime total, returning false (so the title stays on the
+// name) until at least a full minute has been meditated.
+static bool format_total(char *buf, size_t size) {
+  if (meditation_total_seconds() < 60) return false;
+  meditation_format_total(buf, size);
+  return true;
+}
+
+static void title_set_name(void) {
+  s_title_showing_total = false;
+  if (s_title_layer) text_layer_set_text(s_title_layer, TITLE_NAME);
+}
+
+static void title_swap(void *data) {
+  // Toggle to whichever face we're not on; fall back to the name if there's no
+  // total to show yet, so a brand-new user just sees "Silent Sit".
+  if (s_title_showing_total || !format_total(s_title_total, sizeof(s_title_total))) {
+    title_set_name();
+  } else {
+    s_title_showing_total = true;
+    text_layer_set_text(s_title_layer, s_title_total);
+  }
+  s_title_timer = app_timer_register(TITLE_SWAP_MS, title_swap, NULL);
+}
 
 #define ACTION_H 34   // "Inizia" line height (GOTHIC_28_BOLD)
 #define GROUP_GAP 4   // space between the action verb and the summary
@@ -112,13 +146,15 @@ static void window_load(Window *window) {
   Layer *root = window_get_root_layer(window);
   GRect bounds = layer_get_bounds(root);
 
-  // Small title, pinned to the top.
-  s_title_layer = text_layer_create(GRect(0, 6, bounds.size.w, 24));
+  // Title, pinned to the top. Tall enough (and word-wrapped) for the two-line
+  // "Hai meditato per …" total it alternates with; the app name stays one line.
+  s_title_layer = text_layer_create(GRect(0, 6, bounds.size.w, 44));
   text_layer_set_background_color(s_title_layer, GColorClear);
   text_layer_set_text_color(s_title_layer, PBL_IF_COLOR_ELSE(GColorLightGray, GColorWhite));
   text_layer_set_font(s_title_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
   text_layer_set_text_alignment(s_title_layer, GTextAlignmentCenter);
-  text_layer_set_text(s_title_layer, "Silent Sit");
+  text_layer_set_overflow_mode(s_title_layer, GTextOverflowModeWordWrap);
+  text_layer_set_text(s_title_layer, TITLE_NAME);
   layer_add_child(root, text_layer_get_layer(s_title_layer));
 
   // Centred block: the action verb with the config summary beneath it. Frames
@@ -159,6 +195,12 @@ static void window_load(Window *window) {
 
 static void window_appear(Window *window) {
   refresh_summary();   // reflect any change made in the settings menu
+  title_set_name();    // always start on the name, then begin alternating
+  if (!s_title_timer) s_title_timer = app_timer_register(TITLE_SWAP_MS, title_swap, NULL);
+}
+
+static void window_disappear(Window *window) {
+  if (s_title_timer) { app_timer_cancel(s_title_timer); s_title_timer = NULL; }
 }
 
 static void window_unload(Window *window) {
@@ -180,6 +222,7 @@ void setup_window_push(void) {
     window_set_window_handlers(s_window, (WindowHandlers){
       .load = window_load,
       .appear = window_appear,
+      .disappear = window_disappear,
       .unload = window_unload,
     });
     window_set_click_config_provider(s_window, click_config_provider);

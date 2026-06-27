@@ -28,6 +28,8 @@ static const char *const STRINGS[LANG_COUNT][MSG_COUNT] = {
     [MSG_VIBE_LIGHT]    = "Light",
     [MSG_VIBE_MEDIUM]   = "Medium",
     [MSG_VIBE_STRONG]   = "Strong",
+    [MSG_TOTAL_HOURS]   = "You've meditated %s hours",
+    [MSG_TOTAL_MIN]     = "You've meditated %d min",
     [MSG_QUIET_TITLE]   = "Turn on Quiet Time",
     [MSG_QUIET_BODY]    = "so you won't be disturbed",
     [MSG_QUIET_HINT]    = "Select = start anyway",
@@ -46,6 +48,8 @@ static const char *const STRINGS[LANG_COUNT][MSG_COUNT] = {
     [MSG_VIBE_LIGHT]    = "Leggero",
     [MSG_VIBE_MEDIUM]   = "Medio",
     [MSG_VIBE_STRONG]   = "Forte",
+    [MSG_TOTAL_HOURS]   = "Hai meditato per %s ore",
+    [MSG_TOTAL_MIN]     = "Hai meditato per %d min",
     [MSG_QUIET_TITLE]   = "Attiva Quiet Time",
     [MSG_QUIET_BODY]    = "per non essere disturbato",
     [MSG_QUIET_HINT]    = "Select = inizia comunque",
@@ -64,6 +68,8 @@ static const char *const STRINGS[LANG_COUNT][MSG_COUNT] = {
     [MSG_VIBE_LIGHT]    = "Suave",
     [MSG_VIBE_MEDIUM]   = "Medio",
     [MSG_VIBE_STRONG]   = "Fuerte",
+    [MSG_TOTAL_HOURS]   = "Has meditado %s horas",
+    [MSG_TOTAL_MIN]     = "Has meditado %d min",
     [MSG_QUIET_TITLE]   = "Activa Quiet Time",
     [MSG_QUIET_BODY]    = "para no ser molestado",
     [MSG_QUIET_HINT]    = "Select = empezar igual",
@@ -82,6 +88,8 @@ static const char *const STRINGS[LANG_COUNT][MSG_COUNT] = {
     [MSG_VIBE_LIGHT]    = "Léger",
     [MSG_VIBE_MEDIUM]   = "Moyen",
     [MSG_VIBE_STRONG]   = "Fort",
+    [MSG_TOTAL_HOURS]   = "Tu as médité %s heures",
+    [MSG_TOTAL_MIN]     = "Tu as médité %d min",
     [MSG_QUIET_TITLE]   = "Activez Quiet Time",
     [MSG_QUIET_BODY]    = "pour ne pas être dérangé",
     [MSG_QUIET_HINT]    = "Select = démarrer quand même",
@@ -100,6 +108,8 @@ static const char *const STRINGS[LANG_COUNT][MSG_COUNT] = {
     [MSG_VIBE_LIGHT]    = "Leicht",
     [MSG_VIBE_MEDIUM]   = "Mittel",
     [MSG_VIBE_STRONG]   = "Stark",
+    [MSG_TOTAL_HOURS]   = "%s Stunden meditiert",
+    [MSG_TOTAL_MIN]     = "%d min meditiert",
     [MSG_QUIET_TITLE]   = "Quiet Time aktivieren",
     [MSG_QUIET_BODY]    = "um nicht gestört zu werden",
     [MSG_QUIET_HINT]    = "Select = trotzdem starten",
@@ -118,6 +128,8 @@ static const char *const STRINGS[LANG_COUNT][MSG_COUNT] = {
     [MSG_VIBE_LIGHT]    = "Leve",
     [MSG_VIBE_MEDIUM]   = "Médio",
     [MSG_VIBE_STRONG]   = "Forte",
+    [MSG_TOTAL_HOURS]   = "Você meditou %s horas",
+    [MSG_TOTAL_MIN]     = "Você meditou %d min",
     [MSG_QUIET_TITLE]   = "Ative Quiet Time",
     [MSG_QUIET_BODY]    = "para não ser incomodado",
     [MSG_QUIET_HINT]    = "Select = começar mesmo assim",
@@ -151,4 +163,8 @@ const char *L(MsgId id) {
   const char *s = STRINGS[s_lang][id];
   if (!s) s = STRINGS[LANG_EN][id];   // fall back to English on any gap
   return s ? s : "";
+}
+
+const char *locale_decimal_sep(void) {
+  return s_lang == LANG_EN ? "." : ",";
 }

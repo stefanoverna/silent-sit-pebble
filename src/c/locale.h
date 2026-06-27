@@ -21,6 +21,8 @@ typedef enum {
   MSG_VIBE_LIGHT,      // strength value: light
   MSG_VIBE_MEDIUM,     // strength value: medium
   MSG_VIBE_STRONG,     // strength value: strong
+  MSG_TOTAL_HOURS,     // lifetime tally, %s hours (decimal): "Hai meditato per 12,5 ore"
+  MSG_TOTAL_MIN,       // lifetime tally, %d minutes: "Hai meditato per 43 min"
   MSG_QUIET_TITLE,     // Quiet-Time reminder headline ("Turn on Quiet Time")
   MSG_QUIET_BODY,      // Quiet-Time reminder body (the reason)
   MSG_QUIET_HINT,      // Quiet-Time reminder hint
@@ -33,3 +35,6 @@ void locale_init(void);
 // The localized string for `id`. Always returns a stable, static pointer safe
 // to hand to text_layer_set_text(); falls back to English on any miss.
 const char *L(MsgId id);
+
+// The decimal mark for the active language ("." for English, "," elsewhere).
+const char *locale_decimal_sep(void);
