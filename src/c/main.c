@@ -41,6 +41,20 @@ uint32_t meditation_total_seconds(void) {
   return s_total_seconds;
 }
 
+void meditation_reset(void) {
+  s_total_seconds = 0;
+  persist_write_int(PKEY_TOTAL_SECS, 0);
+}
+
+// Split the lifetime total into whole hours + tenths of an hour, rounded to the
+// nearest tenth. Shared by both total formatters so they always agree.
+static void total_hours_tenths(int *h, int *tenths) {
+  int mins = (int)(s_total_seconds / 60);
+  *h = mins / 60;
+  *tenths = ((mins % 60) * 10 + 30) / 60;   // round to nearest 0.1 h
+  if (*tenths >= 10) { (*h)++; *tenths = 0; }   // carry e.g. 1.95 h -> 2.0 h
+}
+
 void meditation_format_total(char *buf, size_t size) {
   int mins = (int)(s_total_seconds / 60);
   if (mins < 60) {
@@ -48,12 +62,22 @@ void meditation_format_total(char *buf, size_t size) {
     return;
   }
   // An hour or more: show decimal hours ("12,5 ore"), rounded to a tenth.
-  int h = mins / 60;
-  int tenths = ((mins % 60) * 10 + 30) / 60;   // round to nearest 0.1 h
-  if (tenths >= 10) { h++; tenths = 0; }        // carry e.g. 1.95 h -> 2.0 h
+  int h, tenths;
+  total_hours_tenths(&h, &tenths);
   char num[12];
   snprintf(num, sizeof(num), "%d%s%d", h, locale_decimal_sep(), tenths);
   snprintf(buf, size, L(MSG_TOTAL_HOURS), num);   // "Hai meditato per 12,5 ore"
+}
+
+void meditation_format_total_short(char *buf, size_t size) {
+  int mins = (int)(s_total_seconds / 60);
+  if (mins < 60) {
+    snprintf(buf, size, "%d min", mins);   // "43 min" (min is a universal token)
+    return;
+  }
+  int h, tenths;
+  total_hours_tenths(&h, &tenths);
+  snprintf(buf, size, "%d%s%d h", h, locale_decimal_sep(), tenths);   // "12,5 h"
 }
 
 void config_save(void) {

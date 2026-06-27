@@ -21,6 +21,8 @@ typedef enum {
   MSG_VIBE_LIGHT,      // strength value: light
   MSG_VIBE_MEDIUM,     // strength value: medium
   MSG_VIBE_STRONG,     // strength value: strong
+  MSG_RESET_TOTAL,     // settings row: wipe the lifetime tally
+  MSG_RESET_CONFIRM,   // settings row subtitle once armed: "Press again"
   MSG_TOTAL_HOURS,     // lifetime tally, %s hours (decimal): "Hai meditato per 12,5 ore"
   MSG_TOTAL_MIN,       // lifetime tally, %d minutes: "Hai meditato per 43 min"
   MSG_QUIET_TITLE,     // Quiet-Time reminder headline ("Turn on Quiet Time")

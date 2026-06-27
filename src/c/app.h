@@ -27,6 +27,15 @@ void start_session_flow(void);
 void     meditation_add_seconds(uint32_t seconds);
 uint32_t meditation_total_seconds(void);
 
-// Render the lifetime total into `buf` as "Xh YYm" past an hour, else "Ym".
-// Shared by the home title swap and the summary screen so both read the same.
+// Wipe the lifetime tally back to zero and persist it. Triggered from the
+// settings menu (a confirmed "Reset total" row).
+void     meditation_reset(void);
+
+// Render the lifetime total into `buf` as a sentence ("You've meditated 43
+// min"). Shared by the home title swap and the summary screen so both read the
+// same.
 void     meditation_format_total(char *buf, size_t size);
+
+// Render the lifetime total compactly ("43 min" / "12,5 h") for the settings
+// row that shows — and resets — it.
+void     meditation_format_total_short(char *buf, size_t size);
