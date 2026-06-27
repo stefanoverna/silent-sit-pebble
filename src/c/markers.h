@@ -1,11 +1,22 @@
 #pragma once
 #include <pebble.h>
 
+// How forceful the marker buzzes feel. Intensity is fixed by hardware, so each
+// level lengthens the "on" pulses (see session_window.c) rather than changing
+// amplitude. Order matters: it is the cycle order in the settings screen.
+typedef enum {
+  VIBE_LIGHT = 0,   // short, gentle pulses
+  VIBE_MEDIUM,      // the default
+  VIBE_STRONG,
+  VIBE_STRENGTH_COUNT,
+} VibeStrength;
+
 // The seduta configuration: a cycle length and a periodic tick interval.
 // Both in minutes. interval_min == 0 means "tick off".
 typedef struct {
   uint8_t duration_min;   // cycle length: 10|15|20|30|45|60
   uint8_t interval_min;   // periodic tick: 0|10|30  (0 = off)
+  uint8_t vibe_strength;  // buzz strength: VIBE_LIGHT|VIBE_MEDIUM|VIBE_STRONG
 } SilentSitConfig;
 
 // What (if anything) happens at a given second of the seduta.

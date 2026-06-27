@@ -1,23 +1,28 @@
 #include "settings_window.h"
 #include "app.h"
+#include "session_window.h"
 #include "locale.h"
 
-// The settings menu: a 2-row MenuLayer reached with DOWN from the home screen.
+// The settings menu: a 3-row MenuLayer reached with DOWN from the home screen.
 //
 //   Row 0  Durata       "30 min"          -> cycles the cycle length
 //   Row 1  Intervallo   "10 min" / "off"  -> cycles the tick interval
+//   Row 2  Vibrazione   "Leggero"/...     -> cycles the buzz strength
 //
 // SELECT on a row cycles its value (with wrap) and persists it immediately.
 // BACK pops back to the home screen, which refreshes its summary on appear.
 
 static const uint8_t DURATIONS[] = {10, 15, 20, 30, 45, 60};
 static const uint8_t INTERVALS[] = {10, 30, 0};   // 0 = off
+static const uint8_t STRENGTHS[] = {VIBE_LIGHT, VIBE_MEDIUM, VIBE_STRONG};
 #define N_DURATIONS (sizeof(DURATIONS) / sizeof(DURATIONS[0]))
 #define N_INTERVALS (sizeof(INTERVALS) / sizeof(INTERVALS[0]))
+#define N_STRENGTHS (sizeof(STRENGTHS) / sizeof(STRENGTHS[0]))
 
 #define ROW_DURATION 0
 #define ROW_INTERVAL 1
-#define NUM_ROWS     2
+#define ROW_STRENGTH 2
+#define NUM_ROWS     3
 
 static Window    *s_window;
 static MenuLayer *s_menu;
@@ -34,6 +39,15 @@ static uint8_t cycle_value(const uint8_t *table, size_t n, uint8_t value) {
 static void format_interval(uint8_t interval, char *buf, size_t size) {
   if (interval == 0) snprintf(buf, size, "off");
   else               snprintf(buf, size, "%d min", interval);
+}
+
+// The localized label for a vibration strength (falls back to "light").
+static const char *strength_label(uint8_t strength) {
+  switch (strength) {
+    case VIBE_MEDIUM: return L(MSG_VIBE_MEDIUM);
+    case VIBE_STRONG: return L(MSG_VIBE_STRONG);
+    default:          return L(MSG_VIBE_LIGHT);
+  }
 }
 
 // --- Menu callbacks -----------------------------------------------------------
@@ -55,6 +69,10 @@ static void draw_row(GContext *ctx, const Layer *cell, MenuIndex *idx, void *dat
       format_interval(g_config.interval_min, sub, sizeof(sub));
       menu_cell_basic_draw(ctx, cell, L(MSG_TICK_INTERVAL), sub, NULL);
       break;
+    case ROW_STRENGTH:
+      menu_cell_basic_draw(ctx, cell, L(MSG_VIBE_STRENGTH),
+                           strength_label(g_config.vibe_strength), NULL);
+      break;
   }
 }
 
@@ -65,6 +83,10 @@ static void select_click(MenuLayer *ml, MenuIndex *idx, void *data) {
       break;
     case ROW_INTERVAL:
       g_config.interval_min = cycle_value(INTERVALS, N_INTERVALS, g_config.interval_min);
+      break;
+    case ROW_STRENGTH:
+      g_config.vibe_strength = cycle_value(STRENGTHS, N_STRENGTHS, g_config.vibe_strength);
+      vibe_preview(g_config.vibe_strength);   // buzz so the new strength is felt
       break;
   }
   config_save();

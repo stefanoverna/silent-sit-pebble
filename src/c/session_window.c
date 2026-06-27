@@ -48,20 +48,53 @@ static char s_time_buf[16];         // backs s_time_layer (must outlive the call
 // half is a medium double; the end is two long "gong" pulses so the cycle
 // boundary is felt as heavier, never confused with the half. Intensity is fixed
 // by hardware — only rhythm (pulse/gap durations) distinguishes them.
+//
+// The user's chosen strength (g_config.vibe_strength) lengthens the buzzes:
+// stronger levels stretch the "on" pulses (even-indexed segments) while leaving
+// the silent gaps untouched, so each marker keeps its recognizable rhythm and
+// only feels more emphatic. Percentages are relative to the base "light" timing.
+
+static const uint16_t VIBE_SCALE_PCT[VIBE_STRENGTH_COUNT] = {
+  [VIBE_LIGHT]  = 100,
+  [VIBE_MEDIUM] = 175,
+  [VIBE_STRONG] = 260,
+};
+
+#define VIBE_MAX_SEGMENTS 3
+
+// Scale the on-pulses of `base` by `strength` and enqueue. The scaled pattern is
+// copied by vibes_enqueue_custom_pattern, so a stack buffer is fine.
+static void vibe_play(const uint32_t *base, uint32_t num_segments, uint8_t strength) {
+  if (strength >= VIBE_STRENGTH_COUNT) strength = VIBE_LIGHT;
+  uint16_t pct = VIBE_SCALE_PCT[strength];
+
+  uint32_t seg[VIBE_MAX_SEGMENTS];
+  for (uint32_t i = 0; i < num_segments && i < VIBE_MAX_SEGMENTS; i++) {
+    seg[i] = (i % 2 == 0) ? base[i] * pct / 100 : base[i];   // scale pulses, keep gaps
+  }
+  vibes_enqueue_custom_pattern((VibePattern){ .durations = seg, .num_segments = num_segments });
+}
 
 static void vibe_tick(void) {
   static const uint32_t seg[] = {70};   // brief tap
-  vibes_enqueue_custom_pattern((VibePattern){ .durations = seg, .num_segments = 1 });
+  vibe_play(seg, 1, g_config.vibe_strength);
 }
 
 static void vibe_half(void) {
   static const uint32_t seg[] = {110, 140, 110};   // medium double
-  vibes_enqueue_custom_pattern((VibePattern){ .durations = seg, .num_segments = 3 });
+  vibe_play(seg, 3, g_config.vibe_strength);
 }
 
 static void vibe_end(void) {
   static const uint32_t seg[] = {300, 150, 300};   // two long "gong" pulses
-  vibes_enqueue_custom_pattern((VibePattern){ .durations = seg, .num_segments = 3 });
+  vibe_play(seg, 3, g_config.vibe_strength);
+}
+
+// Settings preview: a single tap at the chosen strength (the tick texture is the
+// most familiar, so the level difference reads clearly).
+void vibe_preview(uint8_t strength) {
+  static const uint32_t seg[] = {70};
+  vibe_play(seg, 1, strength);
 }
 
 // --- Display ------------------------------------------------------------------

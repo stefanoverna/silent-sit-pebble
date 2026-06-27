@@ -17,6 +17,10 @@ typedef enum {
   MSG_HOME_SUMMARY_OFF,// home config line when ticks are off, fmt(duration): "30 min, no ticks"
   MSG_DURATION,        // settings row: expected session length
   MSG_TICK_INTERVAL,   // settings row: tick interval
+  MSG_VIBE_STRENGTH,   // settings row: vibration strength
+  MSG_VIBE_LIGHT,      // strength value: light
+  MSG_VIBE_MEDIUM,     // strength value: medium
+  MSG_VIBE_STRONG,     // strength value: strong
   MSG_QUIET_TITLE,     // Quiet-Time reminder headline ("Turn on Quiet Time")
   MSG_QUIET_BODY,      // Quiet-Time reminder body (the reason)
   MSG_QUIET_HINT,      // Quiet-Time reminder hint

@@ -5,9 +5,11 @@
 // Persist keys (persistent storage survives app close and watch reboot).
 #define PKEY_DURATION 1
 #define PKEY_INTERVAL 2
+#define PKEY_STRENGTH 3
 
-#define DEFAULT_DURATION 30   // minutes
-#define DEFAULT_INTERVAL 10   // minutes
+#define DEFAULT_DURATION 30        // minutes
+#define DEFAULT_INTERVAL 10        // minutes
+#define DEFAULT_STRENGTH VIBE_MEDIUM
 
 // The single source of truth for the session config, owned by main.c.
 extern SilentSitConfig g_config;
