@@ -154,15 +154,26 @@ pebble publish \
   --category health \
   --description "$(cat STORE.txt)" \
   --release-notes "First release" \
-  --icon-small resources/icon.png \
+  --icon-small resources/marketplace_small.png \
+  --icon-large resources/marketplace_large.png \
   --screenshots screenshots/emery/emery_*.png \
   --no-gif-all-platforms
 ```
 
 `pebble publish` builds the `.pbw`, creates (or updates) the appstore listing,
-and uploads the release. It auto-generates a large icon from `icon-small` when
-`--icon-large` is omitted. The web dashboard at `appstore-api.repebble.com/dashboard`
+and uploads the release. The web dashboard at `appstore-api.repebble.com/dashboard`
 is the equivalent for editing the listing afterwards.
+
+The listing (marketplace) icons are **separate** from the on-watch menu icon
+(`resources/icon.png`, a 25×25 monochrome silhouette that Pebble tints): they are
+full-colour tiles on an indigo background. The publish-ready PNGs are committed —
+`resources/marketplace_small.png` (48×48, the flat droplet — stays crisp in app
+lists) and `resources/marketplace_large.png` (144×144, the detailed droplet with
+ripples). They have no committed masters; regenerate them from the image-generator
+prompts and downscale recipe in [`resources/marketplace-icons.md`](resources/marketplace-icons.md).
+
+If `--icon-large` is omitted, `pebble publish` instead auto-generates a large icon
+from `--icon-small`.
 
 Three things that will otherwise bite you:
 
